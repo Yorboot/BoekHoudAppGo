@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func GeneratePdf(companyInfo []string, invoiceInfo []string, items [][]string) error {
+func GeneratePdf(companyInfo []string, invoiceInfo []string, items [][]string, totals []string) error {
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	lineHeight := 20.0
@@ -41,6 +41,8 @@ func GeneratePdf(companyInfo []string, invoiceInfo []string, items [][]string) e
 	addListInfo(pdf, invoiceInfo, lineHeight)
 	pdf.SetY(pdf.GetY() + lineHeight)
 	addTableInfo(pdf, items, lineHeight)
+	pdf.SetY(pdf.GetY() + lineHeight)
+	addListInfo(pdf, totals, lineHeight)
 
 	return pdf.WritePdf("output.pdf")
 }

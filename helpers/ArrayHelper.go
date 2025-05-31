@@ -1,11 +1,5 @@
 package helpers
 
-import (
-	"fmt"
-	"strconv"
-	"time"
-)
-
 func SetBusinessInfo(bedrijfNaam string, straatHuisnummer string, postcodeWoonplaats string) []string {
 	bedrijfInfo := []string{
 		"Bedrijfgegevens:",
@@ -26,15 +20,12 @@ func SetInvoiceInfo(factuurNummer string, factuurDatum string, verloopTermijn st
 	}
 	return invoiceInfo
 }
-func CalculateExperationDate(factuurDatum string, verloopTermijn string) string {
-	date, err := time.Parse("2006-01-02", factuurDatum)
-	if err != nil {
-		fmt.Println("error parsing date:" + err.Error())
+func SetTotals(PricesExcl []string, PricesIncl []string, btwAmounts []string) []string {
+	totals := []string{
+		"Totalen:",
+		"Totaal btw: " + CaluclateTotalBtw(btwAmounts),
+		"Totaal Excl. BTW: " + CalculateTotalExcl(len(PricesExcl), PricesExcl),
+		"Totaal Incl. BTW: " + CalculateTotalIncl(len(PricesIncl), PricesIncl, btwAmounts),
 	}
-	int, er := strconv.Atoi(verloopTermijn)
-	if er != nil {
-		fmt.Println("error parsing date:" + er.Error())
-	}
-	expirationDate := date.AddDate(0, 0, int)
-	return expirationDate.Format("2006-01-02")
+	return totals
 }

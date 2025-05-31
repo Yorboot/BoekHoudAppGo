@@ -21,6 +21,9 @@ func PrintQuestions() {
 	a := app.New()
 	w := a.NewWindow("Factuurformulier")
 	var items [][]string
+	itemPricesExcl := []string{}
+	itemPricesIncl := []string{}
+	btwAmounts := []string{}
 	// Bedrijfsgegevens
 	bedrijfNaam := widget.NewEntry()
 	straatHuisnummer := widget.NewEntry()
@@ -38,9 +41,9 @@ func PrintQuestions() {
 	aantal := widget.NewEntry()
 	btwTarief := widget.NewSelect([]string{"0%", "9%", "21%"}, nil)
 	prijsPerStukExcl := widget.NewEntry()
-	prijsPerStukIncl := widget.NewEntry()
-	totaalExcl := widget.NewEntry()
-	totaalIncl := widget.NewEntry()
+	prijsPerStukIncl := widget.NewLabel("Automatisch berekend")
+	totaalExcl := widget.NewLabel("Automatisch berekend")
+	totaalIncl := widget.NewLabel("Automatisch berekend")
 	bedrijfInfoText := canvas.NewText("Bedrijfsgegevens:", color.White)
 	bedrijfInfoText.TextStyle = fyne.TextStyle{Bold: true}
 	generaalText := canvas.NewText("Factuurgegevens:", color.White)
@@ -50,9 +53,9 @@ func PrintQuestions() {
 	itemText := canvas.NewText("Items:", color.White)
 	itemText.TextStyle = fyne.TextStyle{Bold: true}
 	// Totale bedragen
-	totaalExclBtw := widget.NewEntry()
-	totaalBtw := widget.NewEntry()
-	totaalInclBtw := widget.NewEntry()
+	totaalExclBtw := widget.NewLabel("Wordt automatisch berekend")
+	totaalBtw := widget.NewLabel("Wordt automatisch berekend")
+	totaalInclBtw := widget.NewLabel("Wordt automatisch berekend")
 
 	bedrijfInfoForm := widget.NewForm(
 		widget.NewFormItem("Bedrijfsnaam", bedrijfNaam),
@@ -115,6 +118,15 @@ func PrintQuestions() {
 			totaalExcl.Text,
 			totaalIncl.Text,
 		}
+		itemPricesExcl = append(itemPricesExcl, totaalExcl.Text)
+		itemPricesIncl = append(itemPricesIncl, totaalIncl.Text)
+		btwBase, err := strconv.ParseFloat(prijsPerStukExcl.Text, 64)
+		if err != nil {
+			fmt.Println("Invalid input for prijsPerStukExcl:", prijsPerStukExcl.Text)
+			return
+		}
+		btwAmount := fmt.Sprintf("%.2f", prijsIncl-btwBase)
+		btwAmounts = append(btwAmounts, btwAmount)
 		items = append(items, item)
 
 		// Clear the input fields
@@ -122,9 +134,6 @@ func PrintQuestions() {
 		aantal.SetText("")
 		btwTarief.SetSelected("0%")
 		prijsPerStukExcl.SetText("")
-		prijsPerStukIncl.SetText("")
-		totaalExcl.SetText("")
-		totaalIncl.SetText("")
 		fmt.Print("Succesfully added item: ", item)
 	})
 	// Create the totals section as another form (after bold label)
@@ -136,7 +145,9 @@ func PrintQuestions() {
 	confirmButton := widget.NewButton("Bevestig", func() {
 		bedrijfInfo := helpers.SetBusinessInfo(bedrijfNaam.Text, straatHuisnummer.Text, postcodeWoonplaats.Text)
 		invoiceInfo := helpers.SetInvoiceInfo(factuurNummer.Text, factuurDatum.Text, verloopTermijn.Text, kvkNummer.Text)
-		if err := helpers.GeneratePdf(bedrijfInfo, invoiceInfo, items); err != nil {
+		totals := helpers.SetTotals(itemPricesExcl, itemPricesIncl, btwAmounts)
+
+		if err := helpers.GeneratePdf(bedrijfInfo, invoiceInfo, items, totals); err != nil {
 			log.Fatalf("Failed to generate PDF: %v", err)
 		}
 	})
