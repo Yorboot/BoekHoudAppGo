@@ -1,6 +1,7 @@
 package main
 
 import (
+	"BoekHoudApp/helpers"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -8,11 +9,15 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
+	"log"
 	"strconv"
 	"strings"
 )
 
 func main() {
+	PrintQuestions()
+}
+func PrintQuestions() {
 	a := app.New()
 	w := a.NewWindow("Factuurformulier")
 	var items [][]string
@@ -128,6 +133,13 @@ func main() {
 		widget.NewFormItem("Totaal btw-bedrag", totaalBtw),
 		widget.NewFormItem("Totaal incl. btw", totaalInclBtw),
 	)
+	confirmButton := widget.NewButton("Bevestig", func() {
+		bedrijfInfo := helpers.SetBusinessInfo(bedrijfNaam.Text, straatHuisnummer.Text, postcodeWoonplaats.Text)
+		invoiceInfo := helpers.SetInvoiceInfo(factuurNummer.Text, factuurDatum.Text, verloopTermijn.Text, kvkNummer.Text)
+		if err := helpers.GeneratePdf(bedrijfInfo, invoiceInfo, items); err != nil {
+			log.Fatalf("Failed to generate PDF: %v", err)
+		}
+	})
 
 	// Combine everything into a vertical container
 	form := container.NewVBox(
@@ -140,15 +152,12 @@ func main() {
 		addItemButton,
 		totaalText, // bold label
 		totalenForm,
+		confirmButton,
 	)
 
 	// Optional: update vervaldatum when verlooptermijn changes
 	verloopTermijn.OnChanged = func(s string) {
-		if days, err := strconv.Atoi(s); err == nil {
-			vervalDatum.SetText("+" + strconv.Itoa(days) + " dagen na factuurdatum")
-		} else {
-			vervalDatum.SetText("Ongeldige invoer")
-		}
+		vervalDatum.SetText(helpers.CalculateExperationDate(factuurDatum.Text, verloopTermijn.Text))
 	}
 
 	w.SetContent(form)
