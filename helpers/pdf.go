@@ -10,7 +10,7 @@ func GeneratePdf(companyInfo []string, invoiceInfo []string, items [][]string, t
 	pdf := &gopdf.GoPdf{}
 	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
 	lineHeight := 20.0
-	fontPath := "./fonts/OpenSans-Regular.ttf"
+	fontPath := "./OpenSans-Regular.ttf"
 	fontName := "OpenSans"
 	if _, err := os.Stat(fontPath); os.IsNotExist(err) {
 		return fmt.Errorf("font file not found at: %s", fontPath)
